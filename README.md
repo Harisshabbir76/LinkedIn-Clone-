@@ -31,8 +31,7 @@ To get a local copy up and running, follow these steps.
 
 1.  **Clone the repository:**
     ```sh
-    git clone <your-repository-url>
-    cd <repository-folder>
+    git clone [<your-repository-url>](https://github.com/Harisshabbir76/LinkedIn-Clone-)
     ```
 
 2.  **Setup Backend:**
