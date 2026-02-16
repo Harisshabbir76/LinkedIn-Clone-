@@ -358,7 +358,8 @@ export default function JobApplicationsPage() {
       
       // If backend doesn't filter withdrawn, filter on frontend
       if (!showWithdrawn && statusFilter === 'all') {
-        fetchedApplications = fetchedApplications.filter(app => app.status !== 'withdrawn')
+        // FIXED: Added type annotation for the parameter
+        fetchedApplications = fetchedApplications.filter((app: Application) => app.status !== 'withdrawn')
       }
       
       setApplications(fetchedApplications)
