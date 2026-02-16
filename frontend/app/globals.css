@@ -1,0 +1,188 @@
+/* Color Scheme Variables - LinkedIn Style */
+:root {
+  /* Backgrounds */
+  --color-bg-main: #FFFFFF;
+  --color-bg-card: #F3F2EF;
+  --color-bg-hover: #E8E6E1;
+  
+  /* Buttons */
+  --color-btn-primary: #0A66C2;
+  --color-btn-primary-text: #FFFFFF;
+  --color-btn-primary-hover: #004182;
+  --color-btn-secondary-bg: #FFFFFF;
+  --color-btn-secondary-border: #0A66C2;
+  --color-btn-secondary-text: #0A66C2;
+  
+  /* Text */
+  --color-text-heading: #000000;
+  --color-text-body: #191919;
+  --color-text-secondary: #666666;
+  --color-text-placeholder: #9CA3AF;
+  
+  /* Other */
+  --color-link: #0A66C2;
+  --color-border: #D4D2CE;
+  --color-icon: #666666;
+  --color-shadow: rgba(0, 0, 0, 0.08);
+  --color-success: #057642;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apply color scheme to elements */
+body {
+  background-color: var(--color-bg-main);
+  color: var(--color-text-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-heading);
+}
+
+a {
+  color: var(--color-link);
+}
+
+button.btn-primary {
+  background-color: var(--color-btn-primary) !important;
+  border-color: var(--color-btn-primary) !important;
+  color: var(--color-btn-primary-text) !important;
+}
+
+button.btn-primary:hover {
+  background-color: var(--color-btn-primary-hover) !important;
+  border-color: var(--color-btn-primary-hover) !important;
+}
+
+button.btn-secondary {
+  background-color: var(--color-btn-secondary-bg) !important;
+  border-color: var(--color-btn-secondary-border) !important;
+  color: var(--color-btn-secondary-text) !important;
+}
+
+/* Custom animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Custom styles */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+
+/* Hide extension attributes from being visible */
+[data-bis-extension],
+[__processed_],
+[bis_register],
+[__processed_cd2cf0e3-a64b-4c33-a93d-ef91e297c27b__],
+[__processed_d020211e-bac1-49fd-a909-75718f8fdaea__] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Target all elements with bis_ attributes */
+[data-bis-extension],
+*[bis_],
+*[__processed_] {
+  display: none;
+}
+
+/* Optional: Add a border or indicator in development only */
+body:has([bis_register])::before {
+  content: "⚠️ Browser extension detected";
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #ff6b6b;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 9999;
+}
+
+
+/* styles/globals.css or styles/Navbar.module.css */
+.search-results-dropdown {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  background: white;
+  z-index: 1050;
+}
+
+.search-result-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.search-result-item:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-image {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.search-type-badge {
+  font-size: 0.65rem;
+  padding: 0.25rem 0.5rem;
+  text-transform: uppercase;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .search-container {
+    order: 3;
+    width: 100%;
+    margin-top: 1rem;
+  }
+}
+
+
+
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* Custom styles */
+.glass-morphism {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
