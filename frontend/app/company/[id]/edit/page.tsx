@@ -197,7 +197,12 @@ export default function EditCompanyPage({ params }: { params: Promise<{ id: stri
       const data = await response.json();
       const fetchedCompany = data.company;
       
-      // Check if user is owner
+      // Check if user is owner - FIXED: Added null check for user
+      if (!user) {
+        router.push('/404');
+        return;
+      }
+      
       if (user._id !== fetchedCompany.owner._id) {
         // User is not the owner, redirect to 404
         router.push('/404');
