@@ -1269,7 +1269,8 @@ export default function JobApplicationsPage() {
                           >
                             {sortOrder === 'desc' ? <Fi.FiArrowDown /> : <Fi.FiArrowUp />}
                           </Button>
-                          {stats?.byStatus.withdrawn?.count > 0 && (
+                          {/* FIXED: Added additional optional chaining for byStatus */}
+                          {stats?.byStatus?.withdrawn?.count > 0 && (
                             <Button
                               variant={showWithdrawn ? "secondary" : "outline-secondary"}
                               className="d-flex align-items-center justify-content-center rounded-3"
@@ -1340,7 +1341,7 @@ export default function JobApplicationsPage() {
                             )}
                             <div className="ms-2 text-muted small">
                               Found {sortedApplications.length} application{sortedApplications.length !== 1 ? 's' : ''}
-                              {showWithdrawn && stats?.byStatus.withdrawn?.count > 0 && (
+                              {showWithdrawn && stats?.byStatus?.withdrawn?.count > 0 && (
                                 <span className="ms-1">
                                   ({stats.byStatus.withdrawn.count} withdrawn included)
                                 </span>
@@ -1391,7 +1392,7 @@ export default function JobApplicationsPage() {
                             <span>
                               {sortedApplications.length} candidate{sortedApplications.length !== 1 ? 's' : ''} found
                               {searchTerm && ` for "${searchTerm}"`}
-                              {showWithdrawn && stats?.byStatus.withdrawn?.count > 0 && (
+                              {showWithdrawn && stats?.byStatus?.withdrawn?.count > 0 && (
                                 <span className="ms-1">
                                   ({stats.byStatus.withdrawn.count} withdrawn included)
                                 </span>
@@ -1403,7 +1404,7 @@ export default function JobApplicationsPage() {
                       <div className="text-muted small d-flex align-items-center gap-2">
                         <Fi.FiInfo className="h-3 w-3" />
                         <span>Sorted by {sortBy === 'appliedAt' ? 'Date Applied' : sortBy} ({sortOrder})</span>
-                        {!showWithdrawn && stats?.byStatus.withdrawn?.count > 0 && (
+                        {!showWithdrawn && stats?.byStatus?.withdrawn?.count > 0 && (
                           <span className="text-danger">
                             • {stats.byStatus.withdrawn.count} withdrawn applications hidden
                           </span>
@@ -1466,7 +1467,7 @@ export default function JobApplicationsPage() {
                                     Clear Search
                                   </Button>
                                 )}
-                                {!showWithdrawn && stats?.byStatus.withdrawn?.count > 0 && (
+                                {!showWithdrawn && stats?.byStatus?.withdrawn?.count > 0 && (
                                   <div className="mt-3">
                                     <Button
                                       variant="outline-secondary"
@@ -1619,7 +1620,7 @@ export default function JobApplicationsPage() {
                         <div className="text-muted small">
                           Showing {sortedApplications.length} of {showWithdrawn ? stats?.total || 0 : getActiveApplicationsCount()} applications
                           {searchTerm && ` matching "${searchTerm}"`}
-                          {showWithdrawn && stats?.byStatus.withdrawn?.count > 0 && (
+                          {showWithdrawn && stats?.byStatus?.withdrawn?.count > 0 && (
                             <span className="ms-1">
                               ({stats.byStatus.withdrawn.count} withdrawn included)
                             </span>
