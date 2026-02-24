@@ -1290,6 +1290,7 @@ export default function JobApplicationsPage() {
                     </Row>
                     
                     {/* Active Filters */}
+                    {/* Active Filters */}
                     {(searchTerm || statusFilter !== 'all' || showWithdrawn) && (
                       <Row className="mt-3">
                         <Col xs={12}>
@@ -1341,9 +1342,9 @@ export default function JobApplicationsPage() {
                             )}
                             <div className="ms-2 text-muted small">
                               Found {sortedApplications.length} application{sortedApplications.length !== 1 ? 's' : ''}
-                              {showWithdrawn && stats?.byStatus?.withdrawn?.count > 0 && (
+                              {showWithdrawn && stats?.byStatus?.withdrawn?.count !== undefined && stats.byStatus.withdrawn.count > 0 && (
                                 <span className="ms-1">
-                                  ({stats.byStatus.withdrawn.count} withdrawn included)
+                                  ({stats?.byStatus?.withdrawn?.count || 0} withdrawn included)
                                 </span>
                               )}
                             </div>
