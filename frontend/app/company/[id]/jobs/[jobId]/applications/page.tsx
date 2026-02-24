@@ -166,14 +166,14 @@ export default function JobApplicationsPage() {
   const jobId = params.jobId as string
 
   // Helper function to get image URL
-  const getImageUrl = (imagePath: string | undefined | null) => {
+  const getImageUrl = (imagePath: string | undefined | null): string => {
     if (!imagePath) return ''
     if (imagePath.startsWith('http')) return imagePath
     return `http://localhost:5000/${imagePath.replace(/\\/g, '/')}`
   }
 
   // Helper function to get resume URL
-  const getResumeUrl = (resumePath: string) => {
+  const getResumeUrl = (resumePath: string): string => {
     if (resumePath.startsWith('http')) return resumePath
     return `http://localhost:5000/${resumePath.replace(/\\/g, '/')}`
   }
@@ -195,7 +195,7 @@ export default function JobApplicationsPage() {
   }
 
   // Download resume function
-  const downloadResume = async (applicationId: string, applicantName: string) => {
+  const downloadResume = async (applicationId: string, applicantName: string): Promise<void> => {
     try {
       setDownloading(applicationId)
       const token = localStorage.getItem('token')
@@ -243,12 +243,12 @@ export default function JobApplicationsPage() {
   }
 
   // Get initials for avatar
-  const getInitials = (name: string) => {
+  const getInitials = (name: string): string => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase()
   }
 
   // Get status color
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): string => {
     switch (status) {
       case 'pending': return 'warning'
       case 'reviewed': return 'info'
@@ -262,7 +262,7 @@ export default function JobApplicationsPage() {
   }
 
   // Get status icon
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string): JSX.Element | null => {
     switch (status) {
       case 'pending': return <Fi.FiClock size={14} />
       case 'reviewed': return <Fi.FiEye size={14} />
@@ -276,7 +276,7 @@ export default function JobApplicationsPage() {
   }
 
   // Format date
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string): string => {
     try {
       const date = new Date(dateString)
       return format(date, 'MMM dd, yyyy')
@@ -286,7 +286,7 @@ export default function JobApplicationsPage() {
   }
 
   // Format time
-  const formatTime = (dateString: string) => {
+  const formatTime = (dateString: string): string => {
     try {
       const date = new Date(dateString)
       return format(date, 'hh:mm a')
@@ -296,12 +296,12 @@ export default function JobApplicationsPage() {
   }
 
   // Format datetime
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateString: string): string => {
     return `${formatDate(dateString)} at ${formatTime(dateString)}`
   }
 
   // Helper function to get user's role in company
-  const getUserRoleInCompany = () => {
+  const getUserRoleInCompany = (): string => {
     if (!company || !user) return '';
     
     // First check if user is owner
@@ -322,7 +322,7 @@ export default function JobApplicationsPage() {
   };
 
   // Fetch applications with search functionality
-  const fetchApplications = async () => {
+  const fetchApplications = async (): Promise<void> => {
     try {
       setLoading(true)
       const token = localStorage.getItem('token')
@@ -358,7 +358,6 @@ export default function JobApplicationsPage() {
       
       // If backend doesn't filter withdrawn, filter on frontend
       if (!showWithdrawn && statusFilter === 'all') {
-        // FIXED: Added type annotation for the parameter
         fetchedApplications = fetchedApplications.filter((app: Application) => app.status !== 'withdrawn')
       }
       
@@ -378,7 +377,7 @@ export default function JobApplicationsPage() {
   }
 
   // Fetch job details
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = async (): Promise<void> => {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`http://localhost:5000/api/jobs/${jobId}`, {
@@ -391,7 +390,7 @@ export default function JobApplicationsPage() {
   }
 
   // Fetch company details and check authorization
-  const fetchCompanyDetails = async () => {
+  const fetchCompanyDetails = async (): Promise<boolean> => {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.get(`http://localhost:5000/api/company/${companyId}`, {
@@ -448,43 +447,43 @@ export default function JobApplicationsPage() {
   }, [companyId, user, isAuthenticated, authLoading, router])
 
   // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = e.target.value
     setSearchTerm(value)
   }
 
   // Clear search
-  const handleClearSearch = () => {
+  const handleClearSearch = (): void => {
     setSearchTerm('')
     fetchApplications()
   }
 
   // Handle status filter change
-  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     const value = e.target.value
     setStatusFilter(value)
   }
 
   // Handle sort change
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     const value = e.target.value
     setSortBy(value)
   }
 
   // Handle sort order change
-  const handleSortOrderChange = () => {
+  const handleSortOrderChange = (): void => {
     const newOrder = sortOrder === 'desc' ? 'asc' : 'desc'
     setSortOrder(newOrder)
   }
 
   // Handle view application
-  const handleViewApplication = (application: Application) => {
+  const handleViewApplication = (application: Application): void => {
     setSelectedApplication(application)
     setShowDetailsModal(true)
   }
 
   // Handle status update
-  const handleStatusUpdate = async () => {
+  const handleStatusUpdate = async (): Promise<void> => {
     if (!selectedApplication || !newStatus) return
     
     try {
@@ -518,7 +517,7 @@ export default function JobApplicationsPage() {
   }
 
   // Get phone number to display
-  const getPhoneNumber = (application: Application) => {
+  const getPhoneNumber = (application: Application): string => {
     return application.phone || application.applicant?.phone || 'Not provided'
   }
 
@@ -531,10 +530,10 @@ export default function JobApplicationsPage() {
     }, 500)
 
     return () => clearTimeout(delayDebounceFn)
-  }, [searchTerm, statusFilter, showWithdrawn])
+  }, [searchTerm, statusFilter, showWithdrawn, companyLoading, authLoading, isAuthorized])
 
   // Client-side filtering for better UX (backup)
-  const filterApplications = (applications: Application[]) => {
+  const filterApplications = (applications: Application[]): Application[] => {
     return applications.filter(app => {
       // Exclude withdrawn applications unless showWithdrawn is true
       if (!showWithdrawn && app.status === 'withdrawn') {
@@ -573,7 +572,7 @@ export default function JobApplicationsPage() {
   }
 
   // Client-side sorting
-  const sortApplications = (apps: Application[]) => {
+  const sortApplications = (apps: Application[]): Application[] => {
     return [...apps].sort((a, b) => {
       if (sortBy === 'appliedAt') {
         const dateA = new Date(a.appliedAt).getTime()
@@ -601,7 +600,7 @@ export default function JobApplicationsPage() {
   const sortedApplications = sortApplications(filteredApplications)
 
   // Calculate status distribution for progress bar (excluding withdrawn)
-  const getStatusDistribution = () => {
+  const getStatusDistribution = (): Array<{status: string, count: number, percentage: number}> => {
     if (!stats?.byStatus) return []
     const validStatuses = ['pending', 'reviewed', 'shortlisted', 'interview', 'accepted', 'rejected']
     const filteredStats = Object.entries(stats.byStatus)
@@ -620,11 +619,16 @@ export default function JobApplicationsPage() {
   }
 
   // Calculate active applications count (excluding withdrawn)
-  const getActiveApplicationsCount = () => {
+  const getActiveApplicationsCount = (): number => {
     if (!stats) return 0
     const total = stats.total || 0
     const withdrawn = stats.byStatus.withdrawn?.count || 0
     return total - withdrawn
+  }
+
+  // Get withdrawn count safely
+  const getWithdrawnCount = (): number => {
+    return stats?.byStatus?.withdrawn?.count || 0;
   }
 
   // Loading state
@@ -1024,9 +1028,9 @@ export default function JobApplicationsPage() {
                           <Card.Title className="h6 mb-2 text-muted fw-semibold">Active Applications</Card.Title>
                           <div className="small text-muted">
                             {showWithdrawn ? 'Including withdrawn applications' : 'Excluding withdrawn applications'}
-                            {stats.byStatus.withdrawn?.count > 0 && !showWithdrawn && (
+                            {getWithdrawnCount() > 0 && !showWithdrawn && (
                               <div className="mt-1 text-danger small">
-                                {stats.byStatus.withdrawn?.count} withdrawn (hidden)
+                                {getWithdrawnCount()} withdrawn (hidden)
                               </div>
                             )}
                           </div>
@@ -1133,11 +1137,11 @@ export default function JobApplicationsPage() {
                         Status Distribution
                       </h6>
                       <div className="d-flex align-items-center gap-3">
-                        {stats.byStatus.withdrawn?.count > 0 && (
+                        {getWithdrawnCount() > 0 && (
                           <div className="d-flex align-items-center gap-2">
                             <Badge bg="secondary" className="status-badge">
                               <Fi.FiX size={12} />
-                              Withdrawn: {stats.byStatus.withdrawn.count}
+                              Withdrawn: {getWithdrawnCount()}
                             </Badge>
                             <FormCheck
                               type="switch"
@@ -1269,8 +1273,7 @@ export default function JobApplicationsPage() {
                           >
                             {sortOrder === 'desc' ? <Fi.FiArrowDown /> : <Fi.FiArrowUp />}
                           </Button>
-                          {/* Fixed TypeScript error - Added proper optional chaining for withdrawn.count */}
-                          {stats?.byStatus?.withdrawn?.count !== undefined && stats.byStatus.withdrawn.count > 0 && (
+                          {getWithdrawnCount() > 0 && (
                             <Button
                               variant={showWithdrawn ? "secondary" : "outline-secondary"}
                               className="d-flex align-items-center justify-content-center rounded-3"
@@ -1289,7 +1292,6 @@ export default function JobApplicationsPage() {
                       </Col>
                     </Row>
                     
-                    {/* Active Filters */}
                     {/* Active Filters */}
                     {(searchTerm || statusFilter !== 'all' || showWithdrawn) && (
                       <Row className="mt-3">
@@ -1342,9 +1344,9 @@ export default function JobApplicationsPage() {
                             )}
                             <div className="ms-2 text-muted small">
                               Found {sortedApplications.length} application{sortedApplications.length !== 1 ? 's' : ''}
-                              {showWithdrawn && stats?.byStatus?.withdrawn?.count !== undefined && stats.byStatus.withdrawn.count > 0 && (
+                              {showWithdrawn && getWithdrawnCount() > 0 && (
                                 <span className="ms-1">
-                                  ({stats?.byStatus?.withdrawn?.count || 0} withdrawn included)
+                                  ({getWithdrawnCount()} withdrawn included)
                                 </span>
                               )}
                             </div>
@@ -1393,9 +1395,9 @@ export default function JobApplicationsPage() {
                             <span>
                               {sortedApplications.length} candidate{sortedApplications.length !== 1 ? 's' : ''} found
                               {searchTerm && ` for "${searchTerm}"`}
-                              {showWithdrawn && stats?.byStatus?.withdrawn?.count > 0 && (
+                              {showWithdrawn && getWithdrawnCount() > 0 && (
                                 <span className="ms-1">
-                                  ({stats.byStatus.withdrawn.count} withdrawn included)
+                                  ({getWithdrawnCount()} withdrawn included)
                                 </span>
                               )}
                             </span>
@@ -1405,9 +1407,9 @@ export default function JobApplicationsPage() {
                       <div className="text-muted small d-flex align-items-center gap-2">
                         <Fi.FiInfo className="h-3 w-3" />
                         <span>Sorted by {sortBy === 'appliedAt' ? 'Date Applied' : sortBy} ({sortOrder})</span>
-                        {!showWithdrawn && stats?.byStatus?.withdrawn?.count > 0 && (
+                        {!showWithdrawn && getWithdrawnCount() > 0 && (
                           <span className="text-danger">
-                            • {stats.byStatus.withdrawn.count} withdrawn applications hidden
+                            • {getWithdrawnCount()} withdrawn applications hidden
                           </span>
                         )}
                       </div>
@@ -1468,7 +1470,7 @@ export default function JobApplicationsPage() {
                                     Clear Search
                                   </Button>
                                 )}
-                                {!showWithdrawn && stats?.byStatus?.withdrawn?.count > 0 && (
+                                {!showWithdrawn && getWithdrawnCount() > 0 && (
                                   <div className="mt-3">
                                     <Button
                                       variant="outline-secondary"
@@ -1476,7 +1478,7 @@ export default function JobApplicationsPage() {
                                       className="rounded-pill px-4"
                                     >
                                       <Fi.FiEye className="me-1" />
-                                      Show {stats.byStatus.withdrawn.count} withdrawn applications
+                                      Show {getWithdrawnCount()} withdrawn applications
                                     </Button>
                                   </div>
                                 )}
@@ -1621,9 +1623,9 @@ export default function JobApplicationsPage() {
                         <div className="text-muted small">
                           Showing {sortedApplications.length} of {showWithdrawn ? stats?.total || 0 : getActiveApplicationsCount()} applications
                           {searchTerm && ` matching "${searchTerm}"`}
-                          {showWithdrawn && stats?.byStatus?.withdrawn?.count > 0 && (
+                          {showWithdrawn && getWithdrawnCount() > 0 && (
                             <span className="ms-1">
-                              ({stats.byStatus.withdrawn.count} withdrawn included)
+                              ({getWithdrawnCount()} withdrawn included)
                             </span>
                           )}
                         </div>
@@ -1946,7 +1948,8 @@ export default function JobApplicationsPage() {
                   </Card>
 
                   {/* Education & Experience */}
-                  {(selectedApplication.applicant?.education || selectedApplication.applicant?.experience) && (
+                  {(selectedApplication.applicant?.education && selectedApplication.applicant.education.length > 0) || 
+                   (selectedApplication.applicant?.experience && selectedApplication.applicant.experience.length > 0) ? (
                     <Card className="border-0 shadow-sm card-hover">
                       <Card.Body className="p-4">
                         <h6 className="fw-bold mb-4 d-flex align-items-center gap-2">
@@ -1994,7 +1997,7 @@ export default function JobApplicationsPage() {
                         </Row>
                       </Card.Body>
                     </Card>
-                  )}
+                  ) : null}
                 </Col>
               </Row>
             </Modal.Body>
@@ -2055,7 +2058,7 @@ export default function JobApplicationsPage() {
                   as="textarea"
                   rows={3}
                   value={statusNotes}
-                  onChange={(e) => setStatusNotes(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setStatusNotes(e.target.value)}
                   placeholder="Add any notes about this status change..."
                   className="rounded-3"
                 />
