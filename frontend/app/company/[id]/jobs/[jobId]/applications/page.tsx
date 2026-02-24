@@ -261,8 +261,8 @@ export default function JobApplicationsPage() {
     }
   }
 
-  // Get status icon
-  const getStatusIcon = (status: string): JSX.Element | null => {
+  // Get status icon - FIXED: Changed return type to React.ReactNode
+  const getStatusIcon = (status: string): React.ReactNode => {
     switch (status) {
       case 'pending': return <Fi.FiClock size={14} />
       case 'reviewed': return <Fi.FiEye size={14} />
