@@ -1269,8 +1269,8 @@ export default function JobApplicationsPage() {
                           >
                             {sortOrder === 'desc' ? <Fi.FiArrowDown /> : <Fi.FiArrowUp />}
                           </Button>
-                          {/* FIXED: Added additional optional chaining for byStatus */}
-                          {stats?.byStatus?.withdrawn?.count > 0 && (
+                          {/* Fixed TypeScript error - Added proper optional chaining for withdrawn.count */}
+                          {stats?.byStatus?.withdrawn?.count !== undefined && stats.byStatus.withdrawn.count > 0 && (
                             <Button
                               variant={showWithdrawn ? "secondary" : "outline-secondary"}
                               className="d-flex align-items-center justify-content-center rounded-3"
