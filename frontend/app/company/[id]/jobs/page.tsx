@@ -40,6 +40,13 @@ import {
 } from 'react-icons/fi'
 import JobTabs from '../../../../components/JobTabs'
 
+// Import the Application type from JobTabs or define it here
+interface Application {
+  _id: string
+  // Add other application properties as needed
+  [key: string]: any
+}
+
 // Interfaces
 interface Company {
   _id: string
@@ -74,7 +81,8 @@ interface Job {
     logo?: string
   }
   companyName: string
-  applications?: any[]
+  // Make applications required and of type Application[] to match JobTabs
+  applications: Application[] 
   applicants?: any[]
   createdAt: string
   updatedAt: string
@@ -324,9 +332,15 @@ export default function CompanyJobsPage() {
         toast.success(`Loaded ${jobsData.length} jobs`);
       }
       
-      setJobs(jobsData);
-      setFilteredJobs(applyFilters(jobsData));
-      updateStats(jobsData);
+      // Ensure each job has an applications array (default to empty array if missing)
+      const normalizedJobsData = jobsData.map(job => ({
+        ...job,
+        applications: job.applications || []
+      }));
+      
+      setJobs(normalizedJobsData);
+      setFilteredJobs(applyFilters(normalizedJobsData));
+      updateStats(normalizedJobsData);
       
     } catch (error: any) {
       console.error('All endpoints failed:', error);
