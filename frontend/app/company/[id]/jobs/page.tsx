@@ -67,7 +67,7 @@ interface Job {
   location: string
   type: string
   employmentType: string
-  salary?: any
+  salary: any // Make it required to match JobTabs
   company: {
     _id: string
     name: string
@@ -86,7 +86,7 @@ interface Job {
     maxYears: number
   }
   applicationDeadline?: string
-  // Add these fields to match what JobTabs might expect (without duplicate createdAt)
+  // Add these fields to match what JobTabs might expect
   postedBy?: {
     _id: string
     name: string
