@@ -59,6 +59,7 @@ interface Company {
   jobs: string[]
 }
 
+// Define a comprehensive Job interface that matches what JobTabs expects
 interface Job {
   _id: string
   title: string
@@ -66,7 +67,7 @@ interface Job {
   location: string
   type: string
   employmentType: string
-  salary: any
+  salary?: any
   company: {
     _id: string
     name: string
@@ -85,6 +86,21 @@ interface Job {
     maxYears: number
   }
   applicationDeadline?: string
+  // Add these fields to match what JobTabs might expect
+  postedBy?: {
+    _id: string
+    name: string
+    email: string
+  }
+  requirements?: string[]
+  responsibilities?: string[]
+  benefits?: string[]
+  skills?: string[]
+  category?: string
+  industry?: string
+  views?: number
+  applicationsCount?: number
+  createdAt?: string
 }
 
 interface Stats {
@@ -123,14 +139,14 @@ export default function CompanyJobsPage() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null)
 
   // Helper function to get image URL
-  const getImageUrl = (imagePath: string | undefined | null) => {
+  const getImageUrl = (imagePath: string | undefined | null): string => {
     if (!imagePath) return ''
     if (imagePath.startsWith('http')) return imagePath
     return `http://localhost:5000/${imagePath.replace(/\\/g, '/')}`
   }
 
   // Format date
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
@@ -140,7 +156,7 @@ export default function CompanyJobsPage() {
   }
 
   // Apply filters and search
-  const applyFilters = (jobsList: Job[]) => {
+  const applyFilters = (jobsList: Job[]): Job[] => {
     let result = [...jobsList]
 
     // Apply search filter
@@ -151,7 +167,7 @@ export default function CompanyJobsPage() {
         job.description.toLowerCase().includes(term) ||
         job.location.toLowerCase().includes(term) ||
         job.type.toLowerCase().includes(term) ||
-        job.employmentType?.toLowerCase().includes(term) ||
+        (job.employmentType && job.employmentType.toLowerCase().includes(term)) ||
         job.companyName.toLowerCase().includes(term)
       )
     }
@@ -176,8 +192,8 @@ export default function CompanyJobsPage() {
         break
       case 'applications':
         result.sort((a, b) => {
-          const aCount = a.applications?.length || a.applicants?.length || 0
-          const bCount = b.applications?.length || b.applicants?.length || 0
+          const aCount = a.applications?.length || a.applicants?.length || a.applicationsCount || 0
+          const bCount = b.applications?.length || b.applicants?.length || b.applicationsCount || 0
           return bCount - aCount
         })
         break
@@ -199,7 +215,7 @@ export default function CompanyJobsPage() {
 
   // Fetch company and check authorization
   useEffect(() => {
-    const checkAuthorization = async () => {
+    const checkAuthorization = async (): Promise<void> => {
       if (authLoading) return
       
       if (!isAuthenticated || !user) {
@@ -248,7 +264,7 @@ export default function CompanyJobsPage() {
   }, [companyId, user, isAuthenticated, authLoading, router])
 
   // Fetch jobs function
-  const fetchJobs = async () => {
+  const fetchJobs = async (): Promise<void> => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -305,7 +321,6 @@ export default function CompanyJobsPage() {
       
       if (jobsData.length === 0) {
         console.log('No jobs found for this company');
-        toast.error('No jobs found for this company');
       } else {
         toast.success(`Loaded ${jobsData.length} jobs`);
       }
@@ -326,11 +341,11 @@ export default function CompanyJobsPage() {
   };
 
   // Update stats
-  const updateStats = (jobsList: Job[]) => {
+  const updateStats = (jobsList: Job[]): void => {
     const totalJobs = jobsList.length
     const activeJobs = jobsList.filter(job => job.status === 'active').length
     const totalApplications = jobsList.reduce((sum, job) => {
-      const appCount = job.applications?.length || job.applicants?.length || 0;
+      const appCount = job.applications?.length || job.applicants?.length || job.applicationsCount || 0;
       return sum + appCount;
     }, 0)
     const urgentJobs = jobsList.filter(job => job.isUrgent).length
@@ -347,7 +362,7 @@ export default function CompanyJobsPage() {
   }
 
   // Handle job deletion
-  const handleJobDelete = async (jobId: string) => {
+  const handleJobDelete = async (jobId: string): Promise<void> => {
     if (!window.confirm('Are you sure you want to delete this job?')) {
       return;
     }
@@ -367,6 +382,7 @@ export default function CompanyJobsPage() {
       const updatedJobs = jobs.filter(job => job._id !== jobId);
       setJobs(updatedJobs);
       setFilteredJobs(applyFilters(updatedJobs));
+      updateStats(updatedJobs);
       toast.success('Job deleted successfully');
     } catch (error: any) {
       console.error('Error deleting job:', error);
@@ -375,7 +391,7 @@ export default function CompanyJobsPage() {
   };
 
   // Handle job status change
-  const handleJobStatusChange = async (jobId: string, newStatus: Job['status']) => {
+  const handleJobStatusChange = async (jobId: string, newStatus: Job['status']): Promise<void> => {
     setIsUpdatingStatus(jobId);
     try {
       const token = localStorage.getItem('token')
@@ -399,6 +415,7 @@ export default function CompanyJobsPage() {
       );
       setJobs(updatedJobs);
       setFilteredJobs(applyFilters(updatedJobs));
+      updateStats(updatedJobs);
       
     } catch (error: any) {
       console.error('Error updating job status:', error);
@@ -409,27 +426,27 @@ export default function CompanyJobsPage() {
   };
 
   // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchTerm(e.target.value);
   }
 
   // Handle status filter change
-  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     setStatusFilter(e.target.value);
   }
 
   // Handle type filter change
-  const handleTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     setTypeFilter(e.target.value);
   }
 
   // Handle sort change
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     setSortBy(e.target.value);
   }
 
   // Clear all filters
-  const clearFilters = () => {
+  const clearFilters = (): void => {
     setSearchTerm('');
     setStatusFilter('all');
     setTypeFilter('all');
@@ -437,7 +454,7 @@ export default function CompanyJobsPage() {
   }
 
   // Navigate to edit job page
-  const navigateToEditJob = (jobId: string) => {
+  const navigateToEditJob = (jobId: string): void => {
     router.push(`/company/${companyId}/jobs/${jobId}/edit`);
   }
 
@@ -703,7 +720,7 @@ export default function CompanyJobsPage() {
                             className="d-inline-flex align-items-center gap-1"
                             disabled={loading}
                           >
-                            <FiRefreshCw /> Refresh
+                            <FiRefreshCw className={loading ? 'spin' : ''} /> Refresh
                           </Button>
                         </div>
                       </Col>
