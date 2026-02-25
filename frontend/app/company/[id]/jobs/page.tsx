@@ -40,11 +40,22 @@ import {
 } from 'react-icons/fi'
 import JobTabs from '../../../../components/JobTabs'
 
-// Import the Application type from JobTabs or define it here
+// Define the Application interface to match what JobTabs expects
 interface Application {
   _id: string
-  // Add other application properties as needed
-  [key: string]: any
+  applicant: {
+    _id: string
+    name: string
+    email: string
+    profileImage?: string
+  }
+  status: 'pending' | 'reviewed' | 'shortlisted' | 'interview' | 'accepted' | 'rejected' | 'withdrawn'
+  appliedAt: string
+  // Add other optional fields that might be present
+  coverLetter?: string
+  resume?: string
+  notes?: string
+  viewedAt?: string
 }
 
 // Interfaces
