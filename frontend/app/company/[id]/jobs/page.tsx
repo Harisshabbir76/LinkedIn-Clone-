@@ -51,11 +51,25 @@ interface Application {
   }
   status: 'pending' | 'reviewed' | 'shortlisted' | 'interview' | 'accepted' | 'rejected' | 'withdrawn'
   appliedAt: string
-  // Add other optional fields that might be present
   coverLetter?: string
   resume?: string
   notes?: string
   viewedAt?: string
+}
+
+// Applicant type that matches JobTabs expectation
+interface Applicant {
+  _id: string
+  name: string
+  email: string
+  age?: number
+  profileImage?: string
+  appliedAt: string
+  status?: string
+  applicationId?: string
+  coverLetter?: string
+  experience?: string
+  resume?: string
 }
 
 // Interfaces
@@ -85,16 +99,16 @@ interface Job {
   location: string
   type: string
   employmentType: string
-  salary: any // Make it required to match JobTabs
+  salary: any
   company: {
     _id: string
     name: string
     logo?: string
   }
   companyName: string
-  // Make applications required and of type Application[] to match JobTabs
-  applications: Application[] 
-  applicants?: any[]
+  applications: Application[]
+  // Updated to match JobTabs expected type instead of any[]
+  applicants?: Applicant[]
   createdAt: string
   updatedAt: string
   status: 'active' | 'draft' | 'closed' | 'archived' | 'paused'
@@ -105,7 +119,6 @@ interface Job {
     maxYears: number
   }
   applicationDeadline?: string
-  // Add these fields to match what JobTabs might expect
   postedBy?: {
     _id: string
     name: string
@@ -160,7 +173,7 @@ export default function CompanyJobsPage() {
   const getImageUrl = (imagePath: string | undefined | null): string => {
     if (!imagePath) return ''
     if (imagePath.startsWith('http')) return imagePath
-    return `http://localhost:5000/${imagePath.replace(/\\/g, '/')}`
+    return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/${imagePath.replace(/\\/g, '/')}`
   }
 
   // Format date
@@ -177,7 +190,6 @@ export default function CompanyJobsPage() {
   const applyFilters = (jobsList: Job[]): Job[] => {
     let result = [...jobsList]
 
-    // Apply search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim()
       result = result.filter(job => 
@@ -190,17 +202,14 @@ export default function CompanyJobsPage() {
       )
     }
 
-    // Apply status filter
     if (statusFilter !== 'all') {
       result = result.filter(job => job.status === statusFilter)
     }
 
-    // Apply type filter
     if (typeFilter !== 'all') {
       result = result.filter(job => job.employmentType === typeFilter || job.type === typeFilter)
     }
 
-    // Apply sorting
     switch (sortBy) {
       case 'newest':
         result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -223,7 +232,6 @@ export default function CompanyJobsPage() {
     return result
   }
 
-  // Reapply filters when any filter changes
   useEffect(() => {
     if (jobs.length > 0) {
       const filtered = applyFilters(jobs)
@@ -231,7 +239,6 @@ export default function CompanyJobsPage() {
     }
   }, [jobs, searchTerm, statusFilter, typeFilter, sortBy])
 
-  // Fetch company and check authorization
   useEffect(() => {
     const checkAuthorization = async (): Promise<void> => {
       if (authLoading) return
@@ -244,13 +251,13 @@ export default function CompanyJobsPage() {
       try {
         setCompanyLoading(true)
         const token = localStorage.getItem('token')
-        const companyResponse = await axios.get(`http://localhost:5000/api/company/${companyId}`, {
-          headers: { Authorization: token ? `Bearer ${token}` : '' }
-        })
+        const companyResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/company/${companyId}`,
+          { headers: { Authorization: token ? `Bearer ${token}` : '' } }
+        )
 
         const companyData = companyResponse.data.company || companyResponse.data
         
-        // Check if user is owner or team member with appropriate role
         const isOwner = companyData.owner === user._id
         const isTeamMember = companyData.teamMembers?.some((member: any) => 
           member.user?._id === user._id && ['admin', 'recruiter', 'manager', 'hr'].includes(member.role)
@@ -281,96 +288,100 @@ export default function CompanyJobsPage() {
     checkAuthorization()
   }, [companyId, user, isAuthenticated, authLoading, router])
 
-  // Fetch jobs function
   const fetchJobs = async (): Promise<void> => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       if (!token) {
-        toast.error('No authentication token found');
-        router.push('/login');
-        return;
+        toast.error('No authentication token found')
+        router.push('/login')
+        return
       }
 
       const headers = { 
-        Authorization: token ? `Bearer ${token}` : '',
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
-      };
+      }
+
+      const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
       
-      let jobsData: Job[] = [];
+      let jobsData: Job[] = []
       
-      // Try endpoints in order of preference
       const endpoints = [
-        `http://localhost:5000/api/jobs/company/${companyId}`,
-        `http://localhost:5000/api/jobs?companyId=${companyId}`,
-        `http://localhost:5000/api/jobs/user/my-jobs`
-      ];
+        `${BASE_URL}/api/jobs/company/${companyId}`,
+        `${BASE_URL}/api/jobs?companyId=${companyId}`,
+        `${BASE_URL}/api/jobs/user/my-jobs`
+      ]
       
       for (const endpoint of endpoints) {
         try {
-          const response = await axios.get(endpoint, { headers });
+          const response = await axios.get(endpoint, { headers })
           
           if (response.data) {
-            // Handle different response structures
             if (Array.isArray(response.data)) {
-              jobsData = response.data;
+              jobsData = response.data
             } else if (response.data.jobs && Array.isArray(response.data.jobs)) {
-              jobsData = response.data.jobs;
+              jobsData = response.data.jobs
             } else if (response.data.data && Array.isArray(response.data.data)) {
-              jobsData = response.data.data;
+              jobsData = response.data.data
             } else {
-              continue; // Try next endpoint
+              continue
             }
             
-            // If using the general my-jobs endpoint, filter by company
             if (endpoint.includes('my-jobs')) {
               jobsData = jobsData.filter((job: Job) => 
                 job.company && job.company._id === companyId
-              );
+              )
             }
             
-            console.log(`Successfully fetched jobs from ${endpoint}:`, jobsData.length, 'jobs');
-            break; // Exit loop if successful
+            break
           }
         } catch (endpointError) {
-          console.log(`Endpoint ${endpoint} failed, trying next...`);
-          continue;
+          console.log(`Endpoint ${endpoint} failed, trying next...`)
+          continue
         }
       }
-      
-      if (jobsData.length === 0) {
-        console.log('No jobs found for this company');
-      } else {
-        toast.success(`Loaded ${jobsData.length} jobs`);
-      }
-      
-      // Ensure each job has an applications array (default to empty array if missing)
-      const normalizedJobsData = jobsData.map(job => ({
+
+      // Normalize jobs: ensure applications is always an array and
+      // map applicants to the correct shape expected by JobTabs
+      const normalizedJobsData: Job[] = jobsData.map(job => ({
         ...job,
-        applications: job.applications || []
-      }));
+        applications: job.applications || [],
+        applicants: (job.applicants || []).map((a: any): Applicant => ({
+          _id: a._id ?? '',
+          name: a.name ?? '',
+          email: a.email ?? '',
+          age: a.age,
+          profileImage: a.profileImage,
+          appliedAt: a.appliedAt ?? new Date().toISOString(),
+          status: a.status,
+          applicationId: a.applicationId,
+          coverLetter: a.coverLetter,
+          experience: a.experience,
+          resume: a.resume,
+        }))
+      }))
       
-      setJobs(normalizedJobsData);
-      setFilteredJobs(applyFilters(normalizedJobsData));
-      updateStats(normalizedJobsData);
+      setJobs(normalizedJobsData)
+      setFilteredJobs(applyFilters(normalizedJobsData))
+      updateStats(normalizedJobsData)
       
     } catch (error: any) {
-      console.error('All endpoints failed:', error);
-      toast.error('Failed to load jobs. Please check your connection or try again later.');
-      setJobs([]);
-      setFilteredJobs([]);
-      updateStats([]);
+      console.error('All endpoints failed:', error)
+      toast.error('Failed to load jobs. Please check your connection or try again later.')
+      setJobs([])
+      setFilteredJobs([])
+      updateStats([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  // Update stats
   const updateStats = (jobsList: Job[]): void => {
     const totalJobs = jobsList.length
     const activeJobs = jobsList.filter(job => job.status === 'active').length
     const totalApplications = jobsList.reduce((sum, job) => {
-      const appCount = job.applications?.length || job.applicants?.length || job.applicationsCount || 0;
-      return sum + appCount;
+      const appCount = job.applications?.length || job.applicants?.length || job.applicationsCount || 0
+      return sum + appCount
     }, 0)
     const urgentJobs = jobsList.filter(job => job.isUrgent).length
     const featuredJobs = jobsList.filter(job => job.isFeatured).length
@@ -385,104 +396,81 @@ export default function CompanyJobsPage() {
     })
   }
 
-  // Handle job deletion
   const handleJobDelete = async (jobId: string): Promise<void> => {
-    if (!window.confirm('Are you sure you want to delete this job?')) {
-      return;
-    }
+    if (!window.confirm('Are you sure you want to delete this job?')) return
     
     try {
       const token = localStorage.getItem('token')
       await axios.delete(
-        `http://localhost:5000/api/jobs/${jobId}`,
-        {
-          headers: { 
-            Authorization: token ? `Bearer ${token}` : '',
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/jobs/${jobId}`,
+        { headers: { Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } }
+      )
       
-      const updatedJobs = jobs.filter(job => job._id !== jobId);
-      setJobs(updatedJobs);
-      setFilteredJobs(applyFilters(updatedJobs));
-      updateStats(updatedJobs);
-      toast.success('Job deleted successfully');
+      const updatedJobs = jobs.filter(job => job._id !== jobId)
+      setJobs(updatedJobs)
+      setFilteredJobs(applyFilters(updatedJobs))
+      updateStats(updatedJobs)
+      toast.success('Job deleted successfully')
     } catch (error: any) {
-      console.error('Error deleting job:', error);
-      toast.error(error.response?.data?.error || 'Failed to delete job');
+      console.error('Error deleting job:', error)
+      toast.error(error.response?.data?.error || 'Failed to delete job')
     }
-  };
+  }
 
-  // Handle job status change
   const handleJobStatusChange = async (jobId: string, newStatus: Job['status']): Promise<void> => {
-    setIsUpdatingStatus(jobId);
+    setIsUpdatingStatus(jobId)
     try {
       const token = localStorage.getItem('token')
-      // Update job status
       await axios.put(
-        `http://localhost:5000/api/jobs/${jobId}/status`, 
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/jobs/${jobId}/status`, 
         { status: newStatus },
-        { 
-          headers: { 
-            Authorization: token ? `Bearer ${token}` : '',
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+        { headers: { Authorization: token ? `Bearer ${token}` : '', 'Content-Type': 'application/json' } }
+      )
       
-      toast.success(`Job status updated to ${newStatus}`);
+      toast.success(`Job status updated to ${newStatus}`)
       
-      // Update local state
       const updatedJobs = jobs.map(job => 
         job._id === jobId ? { ...job, status: newStatus } : job
-      );
-      setJobs(updatedJobs);
-      setFilteredJobs(applyFilters(updatedJobs));
-      updateStats(updatedJobs);
+      )
+      setJobs(updatedJobs)
+      setFilteredJobs(applyFilters(updatedJobs))
+      updateStats(updatedJobs)
       
     } catch (error: any) {
-      console.error('Error updating job status:', error);
-      toast.error(error.response?.data?.error || 'Failed to update job status');
+      console.error('Error updating job status:', error)
+      toast.error(error.response?.data?.error || 'Failed to update job status')
     } finally {
-      setIsUpdatingStatus(null);
+      setIsUpdatingStatus(null)
     }
-  };
+  }
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setSearchTerm(e.target.value);
+    setSearchTerm(e.target.value)
   }
 
-  // Handle status filter change
   const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
-    setStatusFilter(e.target.value);
+    setStatusFilter(e.target.value)
   }
 
-  // Handle type filter change
   const handleTypeFilterChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
-    setTypeFilter(e.target.value);
+    setTypeFilter(e.target.value)
   }
 
-  // Handle sort change
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
-    setSortBy(e.target.value);
+    setSortBy(e.target.value)
   }
 
-  // Clear all filters
   const clearFilters = (): void => {
-    setSearchTerm('');
-    setStatusFilter('all');
-    setTypeFilter('all');
-    setSortBy('newest');
+    setSearchTerm('')
+    setStatusFilter('all')
+    setTypeFilter('all')
+    setSortBy('newest')
   }
 
-  // Navigate to edit job page
   const navigateToEditJob = (jobId: string): void => {
-    router.push(`/company/${companyId}/jobs/${jobId}/edit`);
+    router.push(`/company/${companyId}/jobs/${jobId}/edit`)
   }
 
-  // Loading state
   if (companyLoading || authLoading || loading) {
     return (
       <div className="min-vh-100 d-flex flex-column align-items-center justify-content-center bg-light">
@@ -492,14 +480,13 @@ export default function CompanyJobsPage() {
     )
   }
 
-  // Not authorized
   if (!isAuthorized || !company) {
     return (
       <div className="min-vh-100 d-flex flex-column align-items-center justify-content-center bg-light">
         <Alert variant="danger" className="text-center">
           <FiBriefcase className="mb-3" size={48} />
           <h4>Access Denied</h4>
-          <p>You are not authorized to view this company's jobs.</p>
+          <p>You are not authorized to view this company&apos;s jobs.</p>
           <Button variant="primary" onClick={() => router.push('/dashboard')}>
             Go to Dashboard
           </Button>
@@ -540,8 +527,8 @@ export default function CompanyJobsPage() {
                           backgroundColor: '#f8f9fa'
                         }}
                         onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=0a66c2&color=fff&size=60`;
+                          const target = e.target as HTMLImageElement
+                          target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=0a66c2&color=fff&size=60`
                         }}
                       />
                     </motion.div>
@@ -758,7 +745,7 @@ export default function CompanyJobsPage() {
                             <small className="text-muted me-2">Active filters:</small>
                             {searchTerm && (
                               <Badge bg="info" className="d-flex align-items-center gap-1">
-                                <FiSearch size={12} /> Search: "{searchTerm}"
+                                <FiSearch size={12} /> Search: &quot;{searchTerm}&quot;
                                 <Button
                                   variant="outline-light"
                                   size="sm"
