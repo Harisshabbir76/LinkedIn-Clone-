@@ -17,7 +17,6 @@ import {
   InputGroup,
   Spinner,
   Image,
-  ProgressBar,
   Alert
 } from 'react-bootstrap'
 import {
@@ -30,17 +29,11 @@ import {
   FiUsers,
   FiBarChart2,
   FiClock,
-  FiUserCheck,
-  FiMapPin,
-  FiDollarSign,
-  FiCheckCircle,
-  FiArchive,
-  FiEye,
-  FiEdit
+  FiUserCheck
 } from 'react-icons/fi'
 import JobTabs from '../../../../components/JobTabs'
 
-// Define the Application interface to match what JobTabs expects
+// Define the Application interface
 interface Application {
   _id: string
   applicant: {
@@ -51,11 +44,25 @@ interface Application {
   }
   status: 'pending' | 'reviewed' | 'shortlisted' | 'interview' | 'accepted' | 'rejected' | 'withdrawn'
   appliedAt: string
-  // Add other optional fields that might be present
   coverLetter?: string
   resume?: string
   notes?: string
   viewedAt?: string
+}
+
+// Define the Applicant interface (for the applicants array)
+interface Applicant {
+  _id: string
+  name: string
+  email: string
+  age?: number
+  profileImage?: string
+  appliedAt: string
+  status?: string
+  applicationId?: string
+  coverLetter?: string
+  experience?: string
+  resume?: string
 }
 
 // Interfaces
@@ -77,7 +84,7 @@ interface Company {
   jobs: string[]
 }
 
-// Define a comprehensive Job interface that matches what JobTabs expects
+// Define the Job interface that matches JobTabs exactly
 interface Job {
   _id: string
   title: string
@@ -85,16 +92,15 @@ interface Job {
   location: string
   type: string
   employmentType: string
-  salary: any // Make it required to match JobTabs
+  salary: any
   company: {
     _id: string
     name: string
     logo?: string
   }
   companyName: string
-  // Make applications required and of type Application[] to match JobTabs
-  applications: Application[] 
-  applicants?: any[]
+  applications: Application[]
+  applicants: Applicant[] // Make it required and match JobTabs exactly
   createdAt: string
   updatedAt: string
   status: 'active' | 'draft' | 'closed' | 'archived' | 'paused'
@@ -105,7 +111,6 @@ interface Job {
     maxYears: number
   }
   applicationDeadline?: string
-  // Add these fields to match what JobTabs might expect
   postedBy?: {
     _id: string
     name: string
@@ -296,7 +301,7 @@ export default function CompanyJobsPage() {
         'Content-Type': 'application/json'
       };
       
-      let jobsData: Job[] = [];
+      let jobsData: any[] = [];
       
       // Try endpoints in order of preference
       const endpoints = [
@@ -323,7 +328,7 @@ export default function CompanyJobsPage() {
             
             // If using the general my-jobs endpoint, filter by company
             if (endpoint.includes('my-jobs')) {
-              jobsData = jobsData.filter((job: Job) => 
+              jobsData = jobsData.filter((job: any) => 
                 job.company && job.company._id === companyId
               );
             }
@@ -343,11 +348,29 @@ export default function CompanyJobsPage() {
         toast.success(`Loaded ${jobsData.length} jobs`);
       }
       
-      // Ensure each job has an applications array (default to empty array if missing)
-      const normalizedJobsData = jobsData.map(job => ({
-        ...job,
-        applications: job.applications || []
-      }));
+      // Transform the data to match the Job interface exactly
+      const normalizedJobsData: Job[] = jobsData.map((job: any) => {
+        // Create applicants array from applications if it doesn't exist
+        const applicants: Applicant[] = job.applicants || job.applications?.map((app: any) => ({
+          _id: app.applicant?._id || app._id || '',
+          name: app.applicant?.name || app.name || '',
+          email: app.applicant?.email || app.email || '',
+          age: app.applicant?.age,
+          profileImage: app.applicant?.profileImage,
+          appliedAt: app.appliedAt || app.createdAt || new Date().toISOString(),
+          status: app.status,
+          applicationId: app._id,
+          coverLetter: app.coverLetter,
+          experience: app.experience,
+          resume: app.resume
+        })) || [];
+        
+        return {
+          ...job,
+          applications: job.applications || [],
+          applicants: applicants // Ensure applicants is always an array
+        } as Job;
+      });
       
       setJobs(normalizedJobsData);
       setFilteredJobs(applyFilters(normalizedJobsData));

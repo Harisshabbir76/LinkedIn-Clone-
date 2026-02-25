@@ -33,7 +33,7 @@ import {
   FiExternalLink,
   FiPlus,
   FiEye,
-  FiX // Added X icon for withdrawn
+  FiX
 } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
@@ -46,13 +46,22 @@ interface Applicant {
   email: string
   age?: number
   profileImage?: string
-  skills?: string[]
-  education?: any[]
+  appliedAt: string
+  status?: string
+  applicationId?: string
+  coverLetter?: string
+  experience?: string
+  resume?: string
 }
 
 interface Application {
   _id: string
-  applicant: Applicant
+  applicant: {
+    _id: string
+    name: string
+    email: string
+    profileImage?: string
+  }
   status: string
   appliedAt: string
   coverLetter?: string
@@ -74,19 +83,7 @@ interface Job {
   }
   companyName: string
   applications: Application[]
-  applicants: Array<{
-    _id: string
-    name: string
-    email: string
-    age?: number
-    profileImage?: string
-    appliedAt: string
-    status?: string
-    applicationId?: string
-    coverLetter?: string
-    experience?: string
-    resume?: string
-  }>
+  applicants: Applicant[]
   createdAt: string
   updatedAt: string
   status: 'active' | 'draft' | 'closed' | 'archived'
@@ -97,7 +94,11 @@ interface Job {
     maxYears: number
   }
   applicationDeadline?: string
-  postedBy: string
+  postedBy?: {
+    _id: string
+    name: string
+    email: string
+  }
 }
 
 interface JobTabsProps {
@@ -152,7 +153,7 @@ const JobTabs = ({
             `http://localhost:5000/api/applications/job/${job._id}/applicants`,
             { 
               headers: { Authorization: token ? `Bearer ${token}` : '' },
-              timeout: 5000 // 5 second timeout
+              timeout: 5000
             }
           )
           
@@ -162,13 +163,11 @@ const JobTabs = ({
             const withdrawnCount = applications.filter((app: any) => app.status === 'withdrawn').length
             stats[job._id] = { active: activeCount, withdrawn: withdrawnCount }
           } else {
-            // Fallback to job's application count if API fails
             const totalCount = job.applications?.length || job.applicants?.length || 0
             stats[job._id] = { active: totalCount, withdrawn: 0 }
           }
         } catch (error) {
           console.log(`Could not fetch stats for job ${job._id}:`, error)
-          // Fallback to job's application count
           const totalCount = job.applications?.length || job.applicants?.length || 0
           stats[job._id] = { active: totalCount, withdrawn: 0 }
         }
@@ -288,17 +287,14 @@ const JobTabs = ({
 
   // Get active applications count (excluding withdrawn)
   const getActiveApplicationsCount = (job: Job): number => {
-    // Use cached stats if available
     if (applicationStats[job._id]) {
       return applicationStats[job._id].active
     }
     
-    // Fallback: filter applications array
     if (job.applications) {
       return job.applications.filter(app => app.status !== 'withdrawn').length
     }
     
-    // Fallback: filter applicants array
     if (job.applicants) {
       return job.applicants.filter(app => app.status !== 'withdrawn').length
     }
@@ -308,17 +304,14 @@ const JobTabs = ({
 
   // Get withdrawn applications count
   const getWithdrawnApplicationsCount = (job: Job): number => {
-    // Use cached stats if available
     if (applicationStats[job._id]) {
       return applicationStats[job._id].withdrawn
     }
     
-    // Fallback: filter applications array
     if (job.applications) {
       return job.applications.filter(app => app.status === 'withdrawn').length
     }
     
-    // Fallback: filter applicants array
     if (job.applicants) {
       return job.applicants.filter(app => app.status === 'withdrawn').length
     }
