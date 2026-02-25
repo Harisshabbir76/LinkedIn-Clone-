@@ -86,7 +86,7 @@ interface Job {
     maxYears: number
   }
   applicationDeadline?: string
-  // Add these fields to match what JobTabs might expect
+  // Add these fields to match what JobTabs might expect (without duplicate createdAt)
   postedBy?: {
     _id: string
     name: string
@@ -100,7 +100,6 @@ interface Job {
   industry?: string
   views?: number
   applicationsCount?: number
-  createdAt?: string
 }
 
 interface Stats {
